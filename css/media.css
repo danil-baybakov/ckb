@@ -1,34 +1,29 @@
 /**************************************/
-/************  1600 *******************/
+/************  922 ********************/
 /**************************************/
 
+@media (max-width: 922px) {
+  :root {
+    --tcol1: 11%;
+    --tcol2: 29.5%;
+    --tcol3: 13.5%;
+    --tcol4: 12%;
+    --tcol5: 19%;
+  }
 
-@media (max-width: 1600px) {
+  .btn-action:first-child {
+    margin-bottom: 12px;
+  }
 
-}
+  .clients__thead-th:nth-child(5),
+  .clients__tbody-td:nth-child(5) {
+    padding-left: 12px;
+  }
 
-
-/**************************************/
-/************  1440 *******************/
-/**************************************/
-
-
-@media (max-width: 1440px) {
-
-}
-
-/**************************************/
-/************  1024 *******************/
-/**************************************/
-
-@media (max-width: 1024px) {
-
-}
-
-/**************************************/
-/************  992 ********************/
-/**************************************/
-@media (max-width: 992px) {
+  .clients__thead-th:nth-child(6),
+  .clients__tbody-td:nth-child(6) {
+    padding-left: 5px;
+  }
 
 }
 
@@ -37,17 +32,10 @@
 /**************************************/
 
 @media (max-width: 768px) {
-
+  .modal__bottom-btn-save--add {
+    margin-top: 11px;
+  }
 }
-
-/**************************************/
-/************  672 ********************/
-/**************************************/
-
-@media (max-width: 672px) {
-
-}
-
 
 /**************************************/
 /************  576 ********************/
@@ -55,12 +43,70 @@
 
 @media (max-width: 576px) {
 
-}
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
 
-/**************************************/
-/************  320 ********************/
-/**************************************/
+  /* header */
 
-@media (max-width: 320px) {
+  .header__logo {
+    margin-right: 0;
+  }
+
+  .header__svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .header__text {
+    display: none;
+  }
+
+  .header__container {
+    justify-content: center;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* table */
+
+  .clients__container {
+    padding-top: 30px;
+    padding-bottom: 37px;
+  }
+
+  .clients__title {
+    font-size: 18px;
+    line-height: 25px;
+    margin-bottom: 3px;
+  }
+
+  /* modal */
+
+  .modal__container {
+    width: 300px;
+  }
+
+  .modal__btn-close {
+    top: 3px;
+    right: 3px;
+  }
+
+  .modal__top,
+  .modal__middle,
+  .modal__bottom {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .modal__item-choise {
+    width: 110px;
+  }
+
+  .modal__item-input {
+    width: calc(100% - 110px);
+    padding: 8px 5px;
+  }
 
 }
