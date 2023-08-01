@@ -63,14 +63,14 @@
 
   // функция инициализирует кастомный селект
   function initCustomChoise(el) {
-    new Choices(el, {
-      searchEnabled: false,
-      allowHTML: false,
-      position: 'bottom',
-      placeholder: false,
-      itemSelectText: '',
-      sorter: () => { },
-    });
+    return new Choices(el, {
+                            searchEnabled: false,
+                            allowHTML: false,
+                            position: 'bottom',
+                            placeholder: false,
+                            itemSelectText: '',
+                            sorter: () => { },
+                        });
   }
 
   // функция инициализации кастомного тултипа
@@ -518,7 +518,7 @@
 
     let result = true;
     let message = '';
-    let countMessage = 0;
+    const numsErrField = [];
 
     // проверка ввода имени
     if (data.name === '') {
@@ -557,17 +557,20 @@
       if (data.contacts[key].value === '') {
         result = false;
         message = message + `Значение контакта №${Number(key) + 1} не заполнено !!!<br>`;
+        numsErrField.push(key);
       }
 
       if (data.contacts[key].value.length >= 30) {
         result = false;
         message = message + `Значение контакта №${Number(key) + 1} слишком длинное (> 30 символов) !!!<br>`;
+        numsErrField.push(key);
       }
 
       if (data.contacts[key].type === 'Телефон') {
         if (!(reTel.test(data.contacts[key].value))) {
           result = false;
           message = message + `Контакт №${Number(key) + 1} - Номер телефона введен не правильно !!!<br>`;
+          numsErrField.push(key);
         }
       }
 
@@ -575,6 +578,7 @@
         if (!(reEmail.test(data.contacts[key].value))) {
           result = false;
           message = message + `Контакт №${Number(key) + 1} - Адрес электронной почты введен неправильно !!!<br>`;
+          numsErrField.push(key);
         }
       }
     }
@@ -583,9 +587,112 @@
 
     return {
       result,
-      message
+      message,
+      numsErrField
     }
   }
+
+  // функция создает html-элемент контакта для модального окна
+  function createModalContact(contact, number) {
+    // создаем html-элемент - контейнер контакта модального окна
+    const modalItem = document.createElement('li');
+    modalItem.classList.add('modal__item');
+
+    // создаем и добавляем в DOM обертку селекта
+    const modalItemChoise = document.createElement('div');
+    modalItemChoise.classList.add('modal__item-choise');
+    modalItem.append(modalItemChoise);
+
+    // создаем и добавляем в DOM селект
+    const modalChoiseSelect = document.createElement('select');
+    modalChoiseSelect.classList.add('modal__choise-select', 'choise');
+    modalItemChoise.append(modalChoiseSelect);
+
+    // создаем и добавляем в DOM список опций селекта
+    const options = ['Телефон', 'Email', 'Facebook', 'VK', 'Другое'];
+    let select = false;
+    for (const option of options) {
+      const modalChoiseOption = document.createElement('option');
+      modalChoiseOption.classList.add('modal__choise-option', 'choise__item');
+      modalChoiseOption.value = option;
+      modalChoiseOption.textContent = option;
+      if (((option === contact.type)) && !select) {
+        modalChoiseOption.selected = 'true';
+        select = true;
+      }
+      modalChoiseSelect.append(modalChoiseOption);
+    }
+
+
+    // создаем маску для ввода значения телефона еслт тип контакта Телефон
+    im = new Inputmask("+7 (999)-999-99-99");
+
+    // создаем кастомный селект
+    const choiсe = initCustomChoise(modalChoiseSelect);
+
+    // вешаем обработчик события выбора в селекте
+    choiсe.passedElement.element.addEventListener('choice', event => {
+      const typeContact = event.detail.choice.value;
+      if (typeContact === 'Телефон') {
+        im.mask(modalItemInput);
+      } else {
+        modalItemInput.inputmask.remove();
+      }
+    })
+
+    // создаем и добавляем в DOM  поле ввода для контакта
+    const modalItemInput = document.createElement('input');
+    modalItemInput.classList.add('modal__item-input', 'input-reset');
+    modalItemInput.type = 'text';
+    modalItemInput.placeholder = 'Введите данные контакта';
+    modalItemInput.value = contact.value;
+    modalItemInput.addEventListener('input', event => {
+      modalItemInput.classList.remove('modal__item-input--error');
+    })
+    modalItem.append(modalItemInput);
+
+    // добавляем атрибут data-type для поля ввода контакта,
+    // для того чтобы однозначно идентифицировать тип поля ввода
+    switch (contact.type) {
+      case 'Телефон':   modalItemInput.dataset.type = 'tel';
+                        im.mask(modalItemInput);
+                        break;
+      case 'Email':   modalItemInput.dataset.type = 'email';
+                      break;
+      case 'Facebook':  modalItemInput.dataset.type = 'facebook';
+                        break;
+      case 'VK':  modalItemInput.dataset.type = 'vk';
+                  break;
+      case 'Другое':  modalItemInput.dataset.type = 'other';
+                      break;
+    }
+
+    // создаем и добавляем в DOM кнопку удаления контакта
+    const modalItemBtn = document.createElement('button');
+    modalItemBtn.classList.add('modal__item-btn', 'modal__item-btn--ok', 'btn-reset');
+    modalItemBtn.innerHTML = `<svg class="modal__item-btn-svg" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g class="modal__item-btn-g">
+                                  <path class="modal__item-btn-path"
+                                    d="M8 2C4.682 2 2 4.682 2 8C2 11.318 4.682 14 8 14C11.318 14 14 11.318 14 8C14 4.682 11.318 2 8 2ZM8 12.8C5.354 12.8 3.2 10.646 3.2 8C3.2 5.354 5.354 3.2 8 3.2C10.646 3.2 12.8 5.354 12.8 8C12.8 10.646 10.646 12.8 8 12.8ZM10.154 5L8 7.154L5.846 5L5 5.846L7.154 8L5 10.154L5.846 11L8 8.846L10.154 11L11 10.154L8.846 8L11 5.846L10.154 5Z"
+                                    fill="#B0B0B0" />
+                                </g>
+                              </svg>`;
+    modalItem.append(modalItemBtn);
+
+    // вешшаем обработчик события click на кнопке удаления контакта
+    modalItemBtn.addEventListener('click', () => {
+      modalItem.remove();
+      checkModalMiddleEmpty();
+    });
+
+    // возвращаем html-верстку поля контакта
+    return {
+      modalItem,
+      modalChoiseSelect,
+      modalItemInput
+    };
+  }
+
 
   // функция создания модального окна для добавления/изменения/удаления клиента
   function createModalWithForm(client = {}, type) {
@@ -762,70 +869,9 @@
       }
     }
 
-    function createModalContact(contact, number) {
-      const modalItem = document.createElement('li');
-      modalItem.classList.add('modal__item');
-
-      const modalItemChoise = document.createElement('div');
-      modalItemChoise.classList.add('modal__item-choise');
-      modalItem.append(modalItemChoise);
-      const modalChoiseSelect = document.createElement('select');
-      modalChoiseSelect.classList.add('modal__choise-select', 'choise');
-      modalItemChoise.append(modalChoiseSelect);
-      const options = ['Телефон', 'Email', 'Facebook', 'VK', 'Другое'];
-      let select = false;
-      for (const option of options) {
-        const modalChoiseOption = document.createElement('option');
-        modalChoiseOption.classList.add('modal__choise-option', 'choise__item');
-        modalChoiseOption.value = option;
-        modalChoiseOption.textContent = option;
-        if (((option === contact.type)) && !select) {
-          modalChoiseOption.selected = 'true';
-          select = true;
-        }
-        modalChoiseSelect.append(modalChoiseOption);
-      }
-
-      const modalItemInput = document.createElement('input');
-      modalItemInput.classList.add('modal__item-input', 'input-reset');
-      modalItem.append(modalItemInput);
-      modalItemInput.type = 'text';
-      modalItemInput.placeholder = 'Введите данные контакта';
-      modalItemInput.value = contact.value;
-      switch (contact.type) {
-        case 'Телефон': modalItemInput.dataset.type = 'tel'; break;
-        case 'Email': modalItemInput.dataset.type = 'email'; break;
-        case 'Facebook': modalItemInput.dataset.type = 'facebook'; break;
-        case 'VK': modalItemInput.dataset.type = 'vk'; break;
-        case 'Другое': modalItemInput.dataset.type = 'other'; break;
-      }
-      const modalItemBtn = document.createElement('button');
-      modalItemBtn.classList.add('modal__item-btn', 'modal__item-btn--ok', 'btn-reset');
-      modalItem.append(modalItemBtn);
-      modalItemBtn.innerHTML = `<svg class="modal__item-btn-svg" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <g class="modal__item-btn-g">
-                                    <path class="modal__item-btn-path"
-                                      d="M8 2C4.682 2 2 4.682 2 8C2 11.318 4.682 14 8 14C11.318 14 14 11.318 14 8C14 4.682 11.318 2 8 2ZM8 12.8C5.354 12.8 3.2 10.646 3.2 8C3.2 5.354 5.354 3.2 8 3.2C10.646 3.2 12.8 5.354 12.8 8C12.8 10.646 10.646 12.8 8 12.8ZM10.154 5L8 7.154L5.846 5L5 5.846L7.154 8L5 10.154L5.846 11L8 8.846L10.154 11L11 10.154L8.846 8L11 5.846L10.154 5Z"
-                                      fill="#B0B0B0" />
-                                  </g>
-                                </svg>`;
-
-      modalItemBtn.addEventListener('click', () => {
-        modalItem.remove();
-        checkModalMiddleEmpty();
-      });
-
-      return {
-        modalItem,
-        modalChoiseSelect,
-        modalItemInput
-      };
-    }
-
     if (modalType === 'change') {
       for (const key in contacts) {
         const contactElement = createModalContact(contacts[key], Number(key) + 1);
-        initCustomChoise(contactElement.modalChoiseSelect);
         modalList.append(contactElement.modalItem);
       }
     }
@@ -946,6 +992,9 @@
         onClose(tl1);
       } else {
         modalBottomText.innerHTML = resultCheckData.message;
+        for (item of resultCheckData.numsErrField) {
+          document.querySelectorAll('.modal__item-input')[item].classList.add('modal__item-input--error');
+        }
       }
 
 

@@ -761,6 +761,11 @@ html {
   color: #B0B0B0;
 }
 
+.modal__item-input--error {
+  border: 1px solid red;
+  color: red;
+}
+
 .modal__item-btn {
   display: none;
   position: absolute;
