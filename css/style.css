@@ -778,6 +778,12 @@ html {
   border: 1px solid #C8C5D1;
 }
 
+.modal__item-btn--error {
+  border-top: 1px solid red;
+  border-right: 1px solid red;
+  border-bottom: 1px solid red;
+}
+
 .modal__item-btn--ok {
   display: flex;
 }

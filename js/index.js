@@ -64,13 +64,13 @@
   // функция инициализирует кастомный селект
   function initCustomChoise(el) {
     return new Choices(el, {
-                            searchEnabled: false,
-                            allowHTML: false,
-                            position: 'bottom',
-                            placeholder: false,
-                            itemSelectText: '',
-                            sorter: () => { },
-                        });
+      searchEnabled: false,
+      allowHTML: false,
+      position: 'bottom',
+      placeholder: false,
+      itemSelectText: '',
+      sorter: () => { },
+    });
   }
 
   // функция инициализации кастомного тултипа
@@ -148,6 +148,11 @@
       dmy,
       hm
     }
+  }
+
+  // функция делает строку с заглавной буквы
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
   // функция создает HTML верстку шапки панели управления клиентами
@@ -550,7 +555,7 @@
     }
 
     // проверка ввода контактов
-    const reTel = /^(\+7|7|8)?[\s\-]?\(?[489][0-9]{2}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/;
+    const reTel = /^(\+[0-9]|)?[\s\-]?\(?[0-9]{3}\)?[\s\-]?[0-9]{3}[\s\-]?[0-9]{2}[\s\-]?[0-9]{2}$/;
     const reEmail = /^[\w-\.]+@[\w-]+\.[a-z]{2,4}$/i;
 
     for (const key in data.contacts) {
@@ -592,6 +597,51 @@
     }
   }
 
+  // функция создает поле ввода для ФИО
+  function createGroupInput(name, placeholder, isStar = true, requred = true, modalType) {
+    const inputGroup = document.createElement('div');
+    inputGroup.classList.add('modal__group');
+    if (modalType === 'add') inputGroup.classList.add('modal__group--add');
+
+    const modalLable = document.createElement('lable');
+    const modalLableStar = document.createElement('span');
+    if (modalType === 'change') {
+      modalLable.classList.add('modal__lable');
+      modalLableStar.classList.add('modal__lable-star');
+      modalLable.textContent = placeholder;
+      modalLableStar.textContent = '*';
+      inputGroup.append(modalLable);
+      if (isStar) modalLable.append(modalLableStar);
+    }
+
+    const input = document.createElement('input');
+    input.classList.add('modal__input', 'input-reset');
+    if (modalType === 'add') input.classList.add('modal__input--add');
+    input.type = 'text';
+    input.required = requred;
+    input.value = (modalType === 'add') ? '' : name;
+    input.placeholder = '';
+    inputGroup.append(input);
+
+    input.addEventListener('change', () => {
+      input.value = capitalizeFirstLetter(deleteSpaceStr(input.value).toLowerCase());
+    })
+
+    const modalPlaceholder = document.createElement('div');
+    modalPlaceholder.classList.add('modal__placeholder');
+    modalPlaceholder.textContent = placeholder;
+    const modalStrong = document.createElement('strong');
+    modalStrong.classList.add('modal__strong');
+    modalStrong.textContent = '*';
+    inputGroup.append(modalPlaceholder);
+    if (isStar) modalPlaceholder.append(modalStrong);
+
+    return {
+      inputGroup,
+      input
+    };
+  }
+
   // функция создает html-элемент контакта для модального окна
   function createModalContact(contact, number) {
     // создаем html-элемент - контейнер контакта модального окна
@@ -623,9 +673,8 @@
       modalChoiseSelect.append(modalChoiseOption);
     }
 
-
     // создаем маску для ввода значения телефона еслт тип контакта Телефон
-    im = new Inputmask("+7 (999)-999-99-99");
+    im = new Inputmask("+9 (999)-999-99-99");
 
     // создаем кастомный селект
     const choiсe = initCustomChoise(modalChoiseSelect);
@@ -646,25 +695,22 @@
     modalItemInput.type = 'text';
     modalItemInput.placeholder = 'Введите данные контакта';
     modalItemInput.value = contact.value;
-    modalItemInput.addEventListener('input', event => {
-      modalItemInput.classList.remove('modal__item-input--error');
-    })
     modalItem.append(modalItemInput);
 
     // добавляем атрибут data-type для поля ввода контакта,
     // для того чтобы однозначно идентифицировать тип поля ввода
     switch (contact.type) {
-      case 'Телефон':   modalItemInput.dataset.type = 'tel';
-                        im.mask(modalItemInput);
-                        break;
-      case 'Email':   modalItemInput.dataset.type = 'email';
-                      break;
-      case 'Facebook':  modalItemInput.dataset.type = 'facebook';
-                        break;
-      case 'VK':  modalItemInput.dataset.type = 'vk';
-                  break;
-      case 'Другое':  modalItemInput.dataset.type = 'other';
-                      break;
+      case 'Телефон': modalItemInput.dataset.type = 'tel';
+        im.mask(modalItemInput);
+        break;
+      case 'Email': modalItemInput.dataset.type = 'email';
+        break;
+      case 'Facebook': modalItemInput.dataset.type = 'facebook';
+        break;
+      case 'VK': modalItemInput.dataset.type = 'vk';
+        break;
+      case 'Другое': modalItemInput.dataset.type = 'other';
+        break;
     }
 
     // создаем и добавляем в DOM кнопку удаления контакта
@@ -679,6 +725,12 @@
                               </svg>`;
     modalItem.append(modalItemBtn);
 
+    // убираем стили для инвалидного поля ввода значения контакта при вводе нового значения
+    modalItemInput.addEventListener('input', event => {
+      modalItemInput.classList.remove('modal__item-input--error');
+      modalItemBtn.classList.remove('modal__item-btn--error');
+    })
+
     // вешшаем обработчик события click на кнопке удаления контакта
     modalItemBtn.addEventListener('click', () => {
       modalItem.remove();
@@ -692,7 +744,6 @@
       modalItemInput
     };
   }
-
 
   // функция создания модального окна для добавления/изменения/удаления клиента
   function createModalWithForm(client = {}, type) {
@@ -752,10 +803,8 @@
     if (modalType === 'add') modalWrapper.classList.add('modal__wrapper--add');
     modalContainer.append(modalWrapper);
 
-
-    ///////////////////////////
-    // ВВЕРХ модального окна
-    ///////////////////////////
+    // ВЕРХНЯЯ СЕКЦИЯ МОДАЛЬНОГО ОКНА
+    /////////////////////////////////
 
     // создаем и добавляем в обертку модального окна ВВЕРХ модального окна
     const modalTop = document.createElement('div');
@@ -797,51 +846,11 @@
       modalDescr.append(modalSpan);
     }
 
-    // функция создает поле ввода
-    function createGroupInput(name, placeholder, isStar = true, requred = true, modalType) {
-      const inputGroup = document.createElement('div');
-      inputGroup.classList.add('modal__group');
-      if (modalType === 'add') inputGroup.classList.add('modal__group--add');
-
-      const modalLable = document.createElement('lable');
-      const modalLableStar = document.createElement('span');
-      if (modalType === 'change') {
-        modalLable.classList.add('modal__lable');
-        modalLableStar.classList.add('modal__lable-star');
-        modalLable.textContent = placeholder;
-        modalLableStar.textContent = '*';
-        inputGroup.append(modalLable);
-        if (isStar) modalLable.append(modalLableStar);
-      }
-
-      const input = document.createElement('input');
-      input.classList.add('modal__input', 'input-reset');
-      if (modalType === 'add') input.classList.add('modal__input--add');
-      input.type = 'text';
-      input.required = requred;
-      input.value = (modalType === 'add') ? '' : name;
-      input.placeholder = '';
-      inputGroup.append(input);
-
-      const modalPlaceholder = document.createElement('div');
-      modalPlaceholder.classList.add('modal__placeholder');
-      modalPlaceholder.textContent = placeholder;
-      const modalStrong = document.createElement('strong');
-      modalStrong.classList.add('modal__strong');
-      modalStrong.textContent = '*';
-      inputGroup.append(modalPlaceholder);
-      if (isStar) modalPlaceholder.append(modalStrong);
-
-      return {
-        inputGroup,
-        input
-      };
-    }
-
     // создаем и добавляем в ВВЕРХ модального окна поля ввода ФИО
     const inputSurname = createGroupInput(surname, 'Фамилия', true, true, modalType);
     const inputName = createGroupInput(name, 'Имя', true, true, modalType);
     const inputLastName = createGroupInput(lastName, 'Отчество', false, true, modalType);
+
     // если модальное окно для удаления поля ввода ФИО не добавляются
     if (modalType !== 'delete') {
       modalTop.append(inputSurname.inputGroup);
@@ -849,18 +858,15 @@
       modalTop.append(inputLastName.inputGroup);
     }
 
-    ///////////////////////////
-    // СЕРЕДИНА модального окна
-    ///////////////////////////
+    // СРЕДНЯЯ СЕКЦИЯ МОДАЛЬНОГО ОКНА
+    /////////////////////////////////
 
+    // создаем и добавляем в DOM средниюю секцию модального окна
     const modalMidlle = document.createElement('div');
     modalMidlle.classList.add('modal__middle', 'modal__middle--empty');
     if (modalType !== 'delete') modalWrapper.append(modalMidlle);
 
-    const modalList = document.createElement('ul');
-    modalList.classList.add('modal__list', 'list-reset');
-    modalMidlle.append(modalList);
-
+    // функция меняет стиль средней секции молдального окна если список контактов пустой
     function checkModalMiddleEmpty() {
       if (modalList.querySelectorAll('.modal__item').length === 0) {
         modalMidlle.classList.add('modal__middle--empty');
@@ -869,21 +875,26 @@
       }
     }
 
+    // создаем и добавляем средниюю секцию модального окна список контактов
+    const modalList = document.createElement('ul');
+    modalList.classList.add('modal__list', 'list-reset');
+    modalMidlle.append(modalList);
     if (modalType === 'change') {
       for (const key in contacts) {
         const contactElement = createModalContact(contacts[key], Number(key) + 1);
         modalList.append(contactElement.modalItem);
       }
     }
-
     checkModalMiddleEmpty();
 
+    // создаем и добавляем средниюю секцию модального нижнюю секцию для кнопки добавления контакта
     const modalMiddleBottom = document.createElement('div');
     modalMiddleBottom.classList.add('modal__middle-bottom');
     modalMidlle.append(modalMiddleBottom);
+
+    // создаем и добавляем в нижнюю секцию средней секции модального кнопку добавления контакта
     const modalMiddleBtn = document.createElement('button');
     modalMiddleBtn.classList.add('modal__middle-btn', 'btn-reset');
-    modalMiddleBottom.append(modalMiddleBtn);
     modalMiddleBtn.innerHTML = `<svg class="modal__middle-btn-svg" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                   <g class="modal__middle-btn-g">
                                     <path class="modal__middle-btn-path"
@@ -891,12 +902,18 @@
                                         fill="#9873FF" />
                                   </g>
                                 </svg>`;
+    modalMiddleBottom.append(modalMiddleBtn);
+
+    // создаем и добавляем в кнопку добавления контакта элемент с наименованием кнопки
     const modalMiddleBtnText = document.createElement('span');
     modalMiddleBtnText.classList.add('modal__middle-btn-text');
     modalMiddleBtn.append(modalMiddleBtnText);
     modalMiddleBtnText.textContent = 'Добавить контакт';
+
+    // навешиваем обработчик нажатия кнопки lдля добавления клиента
     modalMiddleBtn.addEventListener('click', () => {
       const contacts = document.querySelectorAll('.modal__item');
+      // добавить можно не более 10 контактов
       if (contacts.length < 10) {
         const contactElement = createModalContact({ type: 'Другое', value: '' });
         modalList.append(contactElement.modalItem);
@@ -906,27 +923,31 @@
       }
     });
 
+    // НИЖНЯЯ СЕКЦИЯ МОДАЛЬНОГО ОКНА
+    /////////////////////////////////
 
-    ///////////////////////////
-    // НИЗ модального окна
-    ///////////////////////////
-
+    // создаем и добавляем в DOM нижнюю секцию модального окна
     const modalBootom = document.createElement('div');
     modalBootom.classList.add('modal__bottom');
     if (modalType === 'delete') modalBootom.classList.add('modal__bottom--delete');
     modalWrapper.append(modalBootom);
 
+    // создаем и добавляем в нижнюю секцию модального окна поле вывода сообщений
     const modalBottomText = document.createElement('p');
     modalBottomText.classList.add('modal__bottom-text', 'gap-reset');
     if (modalType === 'delete') modalBottomText.classList.add('modal__bottom-text--delete');
     modalBootom.append(modalBottomText);
 
+    // создаем и добавляем в нижнюю секцию модального окна кнопку сохранения данных/удаления клиента
+    // в зависимости от типа окна
     const modalBottomBtnSave = document.createElement('button');
     modalBottomBtnSave.classList.add('modal__bottom-btn-save', 'btn-reset');
     modalBottomBtnSave.setAttribute('tabindex', '0');
     if (modalType === 'add') modalBottomBtnSave.classList.add('modal__bottom-btn-save--add');
     modalBootom.append(modalBottomBtnSave);
 
+    // создаем иконку загрузки для кнопки сохранения/удаления клиента
+    // для создании анимации загрузки данных
     const modalBottomBtnSaveIcon = document.createElement('span');
     modalBottomBtnSaveIcon.classList.add('modal__bottom-btn-save-icon');
     modalBottomBtnSaveIcon.innerHTML = `<svg class="modal__bottom-btn-save-svg" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -935,32 +956,35 @@
                                               stroke="#B89EFF" stroke-width="2" stroke-miterlimit="10" stroke-linecap="round" />
                                         </svg>`;
 
-
-    //////////////////////////////////////////////////
-    ////
-    //////////////
+    // навешиваем обработчик click на главную кнопку модального окна
+    // для сохранения данных/добавления/удаления студента
     modalBottomBtnSave.addEventListener('click', async (e) => {
 
-      const coisesValue = [];
-      const inputsValue = [];
-      const contacts = [];
+      const coisesValue = [];   // список выбранных типов контактов
+      const inputsValue = [];   // список значений контактов
+      const contacts = [];  // список контактов для отправки на сервер
 
+      // заполняем список выбранных типов контактов
       document.querySelectorAll('.modal__choise-select').forEach((e) => {
         coisesValue.push(e.value);
       });
 
+      // заполняем список значений контактов
       document.querySelectorAll('.modal__item-input').forEach((e) => {
         inputsValue.push(e.value);
       });
 
+      // формируем итоговый список контактов для отправки запроса на сервер
       for (const key in coisesValue) {
         contacts.push({ type: coisesValue[key], value: inputsValue[key] })
       }
 
+      // удаляем лишние пробелы из полей фио модального окна
       inputName.input.value = deleteSpaceStr(inputName.input.value);
       inputSurname.input.value = deleteSpaceStr(inputSurname.input.value);
       inputLastName.input.value = deleteSpaceStr(inputLastName.input.value);
 
+      // формируем итоговый объект с данными для отправки запроса на сервер
       const dataModal = {
         id: client.id,
         name: inputName.input.value,
@@ -969,48 +993,70 @@
         contacts: contacts,
       }
 
+      // очищаем поле вывода сообщений
       modalBottomText.innerHTML = '';
+
+      // валидация полей ввода
       const resultCheckData = checkDataModal(dataModal);
+
+      // если валидация пройдена
       if (resultCheckData.result) {
 
+        // анимация загрузки на кнопке сохранения/добавления/удаления
         modalBottomBtnSaveContent.prepend(modalBottomBtnSaveIcon);
         modalBottomBtnSaveIcon.classList.add('rotate');
+
+        // отключение доступа к элементам
         modalWrapper.classList.add('modal__wrapper--load');
 
+        // если модальное окно для добавления клиента - делаем запрос на сервер для добавления
         if (modalType === 'add') {
           await onAdd(dataModal);
         }
+        // если модальное окно для изменения данных клиента - делаем запрос на сервер для изменения данных
         if (modalType === 'change') {
           await onSave(dataModal);
         }
+        // если модальное окно для удаления клиента - делаем запрос на сервер для удаления
         if (modalType === 'delete') {
           await onDelete(dataModal);
         }
 
+        // выводим в таблицу обновленный список клиентов
         clients = await onGet();
         renderClientsToTable(table, filterListClients(sortListClients(clients, sort), filter));
+
+        // закрываем модальное окно
         onClose(tl1);
+
+        // если валидация не пройдена
       } else {
+        // выводим сообщение об ошибках
         modalBottomText.innerHTML = resultCheckData.message;
+
+        // отмечаем не валидные поля ввода значений контактов красным
         for (item of resultCheckData.numsErrField) {
           document.querySelectorAll('.modal__item-input')[item].classList.add('modal__item-input--error');
+          document.querySelectorAll('.modal__item-btn')[item].classList.add('modal__item-btn--error');
         }
       }
 
-
     });
 
-
+    // создаем и добавляем в кнопку сохранения данных/удаления контейнер внутренних элементов кнопки
     const modalBottomBtnSaveContent = document.createElement('span');
     modalBottomBtnSaveContent.classList.add('modal__bottom-btn-save-content');
     modalBottomBtnSave.append(modalBottomBtnSaveContent);
 
+    // создаем и добавляем в контейнер кнопки сохранения данных/удаления елемент с названием кнопки
     const modalBottomBtnSaveText = document.createElement('span');
     modalBottomBtnSaveText.classList.add('modal__bottom-btn-save-text');
     modalBottomBtnSaveContent.append(modalBottomBtnSaveText);
     modalBottomBtnSaveText.textContent = 'Сохранить';
     if (modalType === 'delete') modalBottomBtnSaveText.textContent = 'Удалить';
 
+    // создаем и добавляем в нижнюю секцию дополнительную кнопку "Удалить клиента"/Отмена
+    // в зависимости от типа модального окна
     const modalBottomBtnDelete = document.createElement('button');
     modalBottomBtnDelete.classList.add('modal__bottom-btn-delete', 'btn-reset');
     modalBootom.append(modalBottomBtnDelete);
@@ -1024,6 +1070,7 @@
       modalBottomBtnDelete.addEventListener('click', () => { onClose(tl1); });
     }
 
+    // выводим готовую html-структуру модального окна
     return modal;
   }
 
