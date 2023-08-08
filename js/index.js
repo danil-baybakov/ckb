@@ -451,6 +451,7 @@
     const btnChange = createBtnAction('change');
 
     btnChange.addEventListener('click', (e) => {
+      e.preventDefault();
       createModalWithForm(clientsObj, 'change');
       btnChange.blur();
     });
@@ -458,6 +459,7 @@
     const btnDelete = createBtnAction('delete');
 
     btnDelete.addEventListener('click', (e) => {
+      e.preventDefault();
       createModalWithForm(clientsObj, 'delete');
       btnDelete.blur();
     });
@@ -792,7 +794,8 @@
                                    d="M22.2333 7.73333L21.2667 6.76666L14.5 13.5334L7.7333 6.7667L6.76664 7.73336L13.5333 14.5L6.76666 21.2667L7.73333 22.2333L14.5 15.4667L21.2666 22.2334L22.2333 21.2667L15.4666 14.5L22.2333 7.73333Z"
                                    fill="#B0B0B0" />
                                </svg>`;
-    modalBtnClose.addEventListener('click', () => {
+    modalBtnClose.addEventListener('click', (e) => {
+      e.preventDefault();
       onClose(tl1);
     })
     modalContainer.append(modalBtnClose);
@@ -959,6 +962,7 @@
     // навешиваем обработчик click на главную кнопку модального окна
     // для сохранения данных/добавления/удаления студента
     modalBottomBtnSave.addEventListener('click', async (e) => {
+      e.preventDefault();
 
       const coisesValue = [];   // список выбранных типов контактов
       const inputsValue = [];   // список значений контактов
