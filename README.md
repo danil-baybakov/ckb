@@ -9,7 +9,7 @@
 -   клонирование репозитория:
 
 ```bash
-git clone https://gitlab.skillbox.ru/daniil_baibakov/frontend-pro.git
+git clone https://github.com/danil-baybakov/ckb.git
 ```
 
 -   запуск сервера:
